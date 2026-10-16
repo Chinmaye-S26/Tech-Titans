@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>CocoLoop</title>
+  <meta name="description" content="CocoLoop: tender coconut shell pickup, routing and payments for Bengaluru wards.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#2E6B2F"/><ellipse cx="20" cy="23" rx="10" ry="11" fill="#7DB84F"/><path d="M11 20 Q20 6 29 20Z" fill="#9BCB6A"/><rect x="21" y="3" width="3" height="14" rx="1.5" fill="#E9573F" transform="rotate(18 22 10)"/></svg>
+        <div><h1>CocoLoop</h1><small>Drink it. Return it. Grow with it.</small></div>
+      </div>
+      <div class="topright">
+        <span id="userChip" class="userchip"></span>
+        <span id="sync" class="sync demo"><i></i><span id="syncText">Starting…</span></span>
+      </div>
+    </header>
+
+    <!-- Role tabs: app.js shows only the tabs your role is allowed to use -->
+    <nav class="roles" role="tablist" aria-label="Sections"></nav>
+
+    <!-- app.js draws the chosen screen here -->
+    <main id="view" aria-live="polite"></main>
+
+    <footer>
+      <span>Team Tech Titans · BGSCET ISE · Anveshan 2026</span>
+      <span>Vendors earn ₹1 per kg of shells</span>
+    </footer>
+  </div>
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- 1. Firebase (cloud database). Works without these if offline: app falls back to demo mode -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <!-- 2. Our code -->
+  <script src="firebase-config.js"></script>
+  <script src="auth.js"></script>        <!-- sign-in and roles -->
+  <script src="store.js"></script>       <!-- saving pickups -->
+  <script src="voice.js"></script>       <!-- voice assistant -->
+  <script src="route.js"></script>       <!-- TSP route optimiser (+ road shortest paths) -->
+  <script src="ml.js"></script>          <!-- demand forecast (ML) -->
+  <script src="planner.js"></script>     <!-- smart pickup planner -->
+  <script src="charts.js"></script>      <!-- charts for AI Insights -->
+  <script src="classifier.js"></script>  <!-- photo classifier (inactive placeholder) -->
+  <script src="app.js"></script>
+</body>
+</html>

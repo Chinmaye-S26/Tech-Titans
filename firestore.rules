@@ -1,0 +1,63 @@
+rules_version = '2';
+
+// CocoLoop security rules: who can read and change what.
+// Paste into Firebase console -> Firestore Database -> Rules -> Publish.
+// Roles come from users/{uid}.role, which only the owner can set.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function hasRole(r) { return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && profile().role == r; }
+    function isOwner()  { return hasRole('owner'); }
+    function isHub()    { return hasRole('hub'); }
+    function isDriver() { return hasRole('driver'); }
+    function isVendor() { return hasRole('vendor'); }
+    function changedOnly(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
+
+    // People and roles: users read their own profile; owner manages roles; hub can read (to assign drivers)
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isOwner() || isHub());
+      allow write: if isOwner();
+    }
+
+    match /pickups/{id} {
+      // READ: owner + hub see everything; a vendor sees only their own; a driver only pickups assigned to them
+      allow read: if isOwner() || isHub()
+        || (isVendor() && resource.data.vendorUid == request.auth.uid)
+        || (isDriver() && resource.data.driverUid == request.auth.uid);
+
+      // CREATE by a vendor: only for their own stall, only as a new request, 1-20 sacks, no weight or payment
+      allow create: if isVendor()
+        && request.resource.data.vendorUid == request.auth.uid
+        && request.resource.data.vendor == profile().vendorId
+        && request.resource.data.status == 'requested'
+        && request.resource.data.sacks is int
+        && request.resource.data.sacks >= 1 && request.resource.data.sacks <= 20
+        && !('actualKg' in request.resource.data)
+        && !('payout' in request.resource.data);
+
+      // CREATE by owner/hub (e.g. IVR line entered by hub staff, sample data)
+      allow create: if isOwner() || isHub();
+
+      // DRIVER: may only mark THEIR assigned pickup as collected, with a real weight
+      allow update: if isDriver()
+        && resource.data.driverUid == request.auth.uid
+        && resource.data.status == 'assigned'
+        && request.resource.data.status == 'collected'
+        && request.resource.data.actualKg is number
+        && request.resource.data.actualKg > 0 && request.resource.data.actualKg <= 500
+        && changedOnly(['status', 'actualKg', 'collectedAt']);
+
+      // HUB: assign drivers and confirm weights/payments. OWNER: anything.
+      allow update: if isHub() || isOwner();
+
+      allow delete: if isOwner();
+    }
+
+    // Everything else is closed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
